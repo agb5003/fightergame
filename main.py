@@ -1,3 +1,10 @@
+'''
+FIGHTER GAME
+Maximilian Fernaldy
+Spring 2024
+Computer Seminar I final project
+'''
+
 import pygame
 from player import Player
 
@@ -58,6 +65,8 @@ def main():
                 
                 if event.key == pygame.K_j:
                     player.lt_atk_pressed = True
+                if event.key == pygame.K_k:
+                    player.hv_atk_pressed = True
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_w:
@@ -71,6 +80,8 @@ def main():
                 
                 if event.key == pygame.K_j:
                     player.lt_atk_pressed = False
+                if event.key == pygame.K_k:
+                    player.hv_atk_pressed = False
         if should_quit:
             break
 
