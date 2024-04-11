@@ -90,7 +90,7 @@ class Player:
                 if self.down_pressed and not self.up_pressed:
                     self.rect.centery += self.speed
             
-            # Attack queuing
+                # Attack queuing
                 if self.lt_atk_pressed:
                     self.light_attack.queue()
 
