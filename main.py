@@ -17,8 +17,8 @@ pygame.display.set_caption("Fighter Game")
 def update(screen, objects):
     screen.fill(pygame.Color("black"))
     for object in objects:
-        object.update(screen)
         screen.blit(object.surf, object.rect)
+        object.update(screen)
     pygame.display.update()
 
 def draw_pause(screen):

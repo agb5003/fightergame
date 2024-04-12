@@ -24,7 +24,28 @@ class Player:
     child_objects = []
 
     class Animation:
-        pass
+        face_left = False
+        def __init__(self, object, frames, images):
+            # object = object whose surface we want to animate
+            # frames = number of frames in the animation
+            # images = path to the images corresponding to frames
+            self.object = object
+            self.frames = frames
+            self.images = [pygame.image.load(image).convert() for image in images]
+            self.left_images = [""] * self.frames
+            for i in range (self.frames):
+                self.images[i] = pygame.transform.scale(self.images[i], (300, 200))
+            for i in range (self.frames):
+                self.left_images[i] = pygame.transform.flip(self.images[i], True, False)
+
+        def __call__(self):
+            # Run the animation loop
+            self.object.current_animation_frame_index %= self.frames
+            if self.object.facing == "left":
+                frame_to_show = self.left_images[self.object.current_animation_frame_index]
+            else:
+                frame_to_show = self.images[self.object.current_animation_frame_index]
+            self.object.surf = frame_to_show
 
     class ChildObject:
         def __init__(self, surf, rect, linger):
@@ -46,7 +67,6 @@ class Player:
             self.parent.action_queued = self
             self.parent.windup_frames = self.windup_frames
         def __call__(self):
-            print("called")
             self.surf = pygame.Surface(self.hitbox_dimensions)
             self.surf.fill("red")
             self.rect = self.surf.get_rect()
@@ -60,45 +80,58 @@ class Player:
             self.parent.cooldown_frames = self.cooldown_frames
     
     def __init__(self, movement_speed, atk_range):
+        # Attributes
         self.atk_range = atk_range
         self.speed = movement_speed
         self.light_attack = self.Attack(self, (50, 20), 3, 3, 10)
         self.heavy_attack = self.Attack(self, (150, 30), 20, 10, 20)
-        self.surf = pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert()
-        self.surf = pygame.transform.scale(self.surf, (220, 120))
+
+        # Appearance
+        self.current_animation_frame_index = 0
+        self.idle_animation = self.Animation(self, 4,
+                               [
+                                   f"./resources/Sprites/Brawler-Girl/Idle/idle{i}.png" for i in range(1,4+1)
+                               ])
+        self.move_animation = self.Animation(self, 10,
+                                             [
+                                                 f"./resources/Sprites/Brawler-Girl/Walk/walk{i}.png" for i in range(1, 10+1)
+                                             ])
+        
+        self.current_animation = self.idle_animation
+        self.current_animation()
 
         self.rect = self.surf.get_rect()
-        print("rect initialized")
     
     def update(self, screen):
         if self.cooldown_frames == 0:
             # Movement and attack queuing is enabled when not on action cooldown
             if not self.action_queued:
                 # Movement
-                if self.left_pressed and not self.right_pressed:
-                    if self.facing != "left":
-                        self.facing = "left"
-                        self.surf = pygame.transform.flip(self.surf, True, False)
-                    self.rect.centerx += -self.speed
-                if self.right_pressed and not self.left_pressed:
-                    if self.facing != "right":
-                        self.facing = "right"
-                        self.surf = pygame.transform.flip(self.surf, True, False)
-                    self.rect.centerx += self.speed
-                if self.up_pressed and not self.down_pressed:
-                    self.rect.centery += -self.speed
-                if self.down_pressed and not self.up_pressed:
-                    self.rect.centery += self.speed
+                if self.left_pressed or self.right_pressed or self.up_pressed or self.down_pressed:
+                    if self.left_pressed and not self.right_pressed:
+                        if self.facing != "left":
+                            self.facing = "left"
+                        self.rect.centerx += -self.speed
+                    if self.right_pressed and not self.left_pressed:
+                        if self.facing != "right":
+                            self.facing = "right"
+                        self.rect.centerx += self.speed
+                    if self.up_pressed and not self.down_pressed:
+                        self.rect.centery += -self.speed
+                    if self.down_pressed and not self.up_pressed:
+                        self.rect.centery += self.speed
+                    
+                    self.current_animation = self.move_animation
+                else:
+                    self.current_animation = self.idle_animation
             
                 # Attack queuing
                 if self.lt_atk_pressed:
                     self.light_attack.queue()
-
                 if self.hv_atk_pressed:
                     self.heavy_attack.queue()
             else:
                 # If an action is in queue, decrease windup by 1
-                print(f"windup is {self.windup_frames}")
                 self.windup_frames -= 1
                 if self.windup_frames == 0:
                     # Call the action in the queue when the windup is done
@@ -108,8 +141,13 @@ class Player:
                     # Clear action queue
                     self.action_queued = None
         else:
-            # Idle animation
+            if self.current_animation != self.idle_animation:
+                self.current_animation = self.idle_animation
             self.cooldown_frames -= 1
+
+        # Run whichever animation is appropriate
+        self.current_animation_frame_index += 1
+        self.current_animation()
         
         for child_object in self.child_objects:
             child_object.update()
