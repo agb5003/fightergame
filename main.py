@@ -6,6 +6,7 @@ Computer Seminar I final project
 '''
 
 import pygame
+from enemy import Enemy
 from player import Player
 
 pygame.init()
@@ -14,11 +15,13 @@ SCREEN_HEIGHT = 720
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Fighter Game")
 
-def update(screen, objects):
+def update(screen, objects, enemies):
     screen.fill(pygame.Color("black"))
+    for enemy in enemies:
+        enemy.update()
     for object in objects:
-        screen.blit(object.surf, object.rect)
-        object.update(screen)
+        object.update()
+    enemies[:] = [enemy for enemy in enemies if enemy.is_alive]
     pygame.display.update()
 
 def draw_pause(screen):
@@ -32,11 +35,15 @@ def main():
     clock = pygame.time.Clock()
     frames_per_second = 60
     objects = []
+    enemies = []
 
-    player = Player(3, 4)
+    player = Player(screen, enemies=enemies)
     player.rect.left = 500
     player.rect.top = 500
     objects.append(player)
+
+    enemy = Enemy(screen)
+    enemies.append(enemy)
 
     should_quit = False
     pause_menu = False
@@ -86,7 +93,7 @@ def main():
             break
 
         if pause_menu == False:
-            update(screen, objects)
+            update(screen, objects, enemies)
         else:
             draw_pause(screen)
 
