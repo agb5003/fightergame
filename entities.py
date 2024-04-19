@@ -138,11 +138,10 @@ class Attack:
                 self.should_start_new_phase = True
             self.animation.frame_index += 1
 
-class Player:
-    def __init__(self, window, enemies):
-        self.window = window
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.facing = "right"
-        self.enemies = enemies
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert_alpha(), (300, 200))
         self.rect = pygame.Rect(20, 700-180, 58, 150)
@@ -185,7 +184,7 @@ class Player:
         self.heavy_attack = Attack(self, 110, 32, 20, self.hv_atk_animation)
         
 
-    def update(self):
+    def update(self, window, enemies):
         if self.state in ["idle", "walk"]:
             if self.left_pressed or self.up_pressed or self.down_pressed or self.right_pressed:
                 self.state = "walk"
@@ -203,8 +202,8 @@ class Player:
                     self.rect.centery += self.movement_speed
                 self.walk_animation.animate()
 
-                if not self.window.rect.contains(self.rect):
-                    self.rect.clamp_ip(self.window.rect)
+                if not window.rect.contains(self.rect):
+                    self.rect.clamp_ip(window.rect)
             else:
                 self.state = "idle"
                 self.idle_animation.animate()
@@ -219,7 +218,7 @@ class Player:
             self.current_attack.windup()
         
         elif self.state == "linger":
-            self.current_attack.linger(self.enemies)
+            self.current_attack.linger(enemies)
         
         elif self.state == "cooldown":
             self.current_attack.cooldown()
@@ -227,21 +226,20 @@ class Player:
         
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
 
-        self.window.screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
+        window.screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
         for object in self.child_objects:
             object.update()
 
-class Enemy:
-    def __init__(self, window, player):
-        self.window = window
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, initial_position):
+        pygame.sprite.Sprite.__init__(self)
         self.facing = "left"
-        self.player = player
         self.is_alive = True
         self.health = 50
         self.child_objects = []
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Enemy-Punk/Idle/idle1.png").convert_alpha(), (300, 200))
-        self.rect = pygame.Rect(90, 100, 300, 200)
+        self.rect = pygame.Rect(initial_position, (300, 200))
         self.state = "idle"
         self.current_attack = None
 
@@ -264,10 +262,10 @@ class Enemy:
         # Attacks
         self.attack = Attack(self, 60, 15, 5, self.atk_animation)
         
-    def update(self):
+    def update(self, screen, player):
         # Get current distance to player
-        x_distance_to_player = self.rect.centerx - self.player.rect.centerx
-        y_distance_to_player = self.rect.centery - self.player.rect.centery
+        x_distance_to_player = self.rect.centerx - player.rect.centerx
+        y_distance_to_player = self.rect.centery - player.rect.centery
         distance_to_player = math.sqrt(x_distance_to_player**2 + y_distance_to_player**2)
         abs_x_distance = math.sqrt(x_distance_to_player**2)
         
@@ -304,17 +302,17 @@ class Enemy:
             self.current_attack.windup()
         
         elif self.state == "linger":
-            self.current_attack.linger([self.player])
+            self.current_attack.linger([player])
         
         elif self.state == "cooldown":
             self.current_attack.cooldown()
 
         if self.health <= 0:
-            self.is_alive = False
+            self.kill()
         
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
 
-        self.window.screen.blit(self.surf, self.rect)
+        screen.blit(self.surf, self.rect)
         for object in self.child_objects:
             object.update()
     
