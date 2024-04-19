@@ -1,3 +1,4 @@
+import math
 import pygame
 
 class IdleAnimation:
@@ -5,7 +6,9 @@ class IdleAnimation:
         self.actor = actor
         self.frame_index = 0
 
-        self.frames = [pygame.transform.scale(frame, (300,200)) for frame in frames]
+        self.rawframes = [pygame.transform.scale(frame, (300,200)) for frame in frames]
+
+        self.frames = [frame.convert_alpha() for frame in self.rawframes]
         self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
 
         self.period = len(self.frames)
@@ -24,9 +27,9 @@ class AttackAnimation:
         self.actor = actor
         self.frame_index = 0
 
-        self.windup_frames = [pygame.transform.scale(frame, (300,200)) for frame in windup_frames]
-        self.linger_frames = [pygame.transform.scale(frame, (300,200)) for frame in linger_frames]
-        self.cooldown_frames = [pygame.transform.scale(frame, (300,200)) for frame in cooldown_frames]
+        self.windup_frames = [pygame.transform.scale(frame, (300,200)).convert_alpha() for frame in windup_frames]
+        self.linger_frames = [pygame.transform.scale(frame, (300,200)).convert_alpha() for frame in linger_frames]
+        self.cooldown_frames = [pygame.transform.scale(frame, (300,200)).convert_alpha() for frame in cooldown_frames]
 
         # Generate flipped frames for when character is facing left
         self.flipped_windup_frames = [pygame.transform.flip(frame, True, False) for frame in self.windup_frames]
@@ -55,8 +58,7 @@ class AttackAnimation:
 class HitterBox:
     def __init__(self, parent, dimensions, linger):
         self.parent = parent
-        self.debugsurf = pygame.Surface(dimensions)
-        self.rect = self.debugsurf.get_rect()
+        self.rect = pygame.Rect((0,0), dimensions)
         self.linger = linger
         self.time_on_screen = 0
 
@@ -136,18 +138,19 @@ class Attack:
                 self.should_start_new_phase = True
             self.animation.frame_index += 1
 
-
 class Player:
-    def __init__(self, screen, enemies):
-        self.screen = screen
+    def __init__(self, window, enemies):
+        self.window = window
         self.facing = "right"
         self.enemies = enemies
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert_alpha(), (300, 200))
-        self.rect = pygame.Rect(90, 100, 300, 200)
+        self.rect = pygame.Rect(20, 700-180, 58, 150)
+        self.debugsurf = pygame.Surface((58, 150))
         self.state = "idle"
         self.current_attack = None
 
+        self.health = 200
         self.movement_speed = 6
         self.up_pressed = False
         self.left_pressed = False
@@ -161,20 +164,20 @@ class Player:
 
         # Idle animations
         self.idle_animation = IdleAnimation(self,
-                                            frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Idle/idle{i}.png").convert_alpha() for i in range(1, 5)])
+                                            frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Idle/idle{i}.png") for i in range(1, 5)])
         self.walk_animation = IdleAnimation(self,
-                                            frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Walk/walk{i}.png").convert_alpha() for i in range(1, 11)])
+                                            frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Walk/walk{i}.png") for i in range(1, 11)])
 
         # Attack animations
         self.lt_atk_animation = AttackAnimation(self,
-                                                windup_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Jab/jab{i}.png").convert_alpha() for i in [1, 1]],
-                                                linger_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Jab/jab{i}.png").convert_alpha() for i in [2, 3, 2]],
-                                                cooldown_frames = [pygame.image.load(f"./resources/Sprites/Brawler-Girl/Jab/jab{i}.png").convert_alpha() for i in [1, 1]]
+                                                windup_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Jab/jab{i}.png") for i in [1, 2]],
+                                                linger_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Jab/jab{i}.png") for i in [2, 3]],
+                                                cooldown_frames = [pygame.image.load(f"./resources/Sprites/Brawler-Girl/Jab/jab{i}.png") for i in [1]]
                                                 )
         self.hv_atk_animation = AttackAnimation(self,
-                                                windup_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Kick/kick{i}.png").convert_alpha() for i in [1, 2, 3]],
-                                                linger_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Kick/kick{i}.png").convert_alpha() for i in [4, 5, 4]],
-                                                cooldown_frames = [pygame.image.load(f"./resources/Sprites/Brawler-Girl/Kick/kick{i}.png").convert_alpha() for i in [2, 1]]
+                                                windup_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Kick/kick{i}.png") for i in [1, 2, 3]],
+                                                linger_frames=[pygame.image.load(f"./resources/Sprites/Brawler-Girl/Kick/kick{i}.png") for i in [4, 5, 4]],
+                                                cooldown_frames = [pygame.image.load(f"./resources/Sprites/Brawler-Girl/Kick/kick{i}.png") for i in [2, 1]]
                                                 )
         
         # Attacks
@@ -199,6 +202,9 @@ class Player:
                 if self.down_pressed and not self.up_pressed:
                     self.rect.centery += self.movement_speed
                 self.walk_animation.animate()
+
+                if not self.window.rect.contains(self.rect):
+                    self.rect.clamp_ip(self.window.rect)
             else:
                 self.state = "idle"
                 self.idle_animation.animate()
@@ -220,7 +226,104 @@ class Player:
         
         
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
-        
-        self.screen.blit(self.surf, self.rect)
+
+        self.window.screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
         for object in self.child_objects:
             object.update()
+
+class Enemy:
+    def __init__(self, window, player):
+        self.window = window
+        self.facing = "left"
+        self.player = player
+        self.is_alive = True
+        self.health = 50
+        self.child_objects = []
+
+        self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Enemy-Punk/Idle/idle1.png").convert_alpha(), (300, 200))
+        self.rect = pygame.Rect(90, 100, 300, 200)
+        self.state = "idle"
+        self.current_attack = None
+
+        self.movement_speed = 3
+
+
+        # Idle animations
+        self.idle_animation = IdleAnimation(self,
+                                            frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Idle/idle{i}.png") for i in range(1, 5)])
+        self.walk_animation = IdleAnimation(self,
+                                            frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Walk/walk{i}.png") for i in range(1, 5)])
+
+        # Attack animations
+        self.atk_animation = AttackAnimation(self,
+                                                windup_frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Punch/punch{i}.png") for i in [1, 2]],
+                                                linger_frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Punch/punch{i}.png") for i in [3, 3, 3]],
+                                                cooldown_frames = [pygame.image.load(f"./resources/Sprites/Enemy-Punk/Punch/punch{i}.png") for i in [2, 2, 2, 1, 1, 1, 1, 1]]
+                                                )
+        
+        # Attacks
+        self.attack = Attack(self, 60, 15, 5, self.atk_animation)
+        
+    def update(self):
+        # Get current distance to player
+        x_distance_to_player = self.rect.centerx - self.player.rect.centerx
+        y_distance_to_player = self.rect.centery - self.player.rect.centery
+        distance_to_player = math.sqrt(x_distance_to_player**2 + y_distance_to_player**2)
+        abs_x_distance = math.sqrt(x_distance_to_player**2)
+        
+        # Check if player is inside detection zone
+        if self.state in ["idle", "walk"]:
+            if distance_to_player < 300 and abs_x_distance > 65:
+                if x_distance_to_player < 0:
+                    self.facing = "right"
+                elif x_distance_to_player > 0:
+                    self.facing = "left"
+                self.state = "walk"
+            else:
+                self.state = "idle"
+
+        if self.state == "idle":
+            if abs_x_distance <= 65:
+                self.attack.queue()
+            else:
+                self.idle_animation.animate()
+            pass
+
+        if self.state == "walk":
+            if self.facing == "left":
+                self.rect.centerx += -self.movement_speed
+            else:
+                self.rect.centerx += self.movement_speed
+            if y_distance_to_player < -25:
+                self.rect.centery += self.movement_speed
+            else:
+                self.rect.centery += -self.movement_speed
+            self.walk_animation.animate()
+
+        elif self.state == "windup":
+            self.current_attack.windup()
+        
+        elif self.state == "linger":
+            self.current_attack.linger([self.player])
+        
+        elif self.state == "cooldown":
+            self.current_attack.cooldown()
+
+        if self.health <= 0:
+            self.is_alive = False
+        
+        self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
+
+        self.window.screen.blit(self.surf, self.rect)
+        for object in self.child_objects:
+            object.update()
+    
+class Map:
+    def __init__(self, background_image):
+        self.background = pygame.image.load(background_image).convert_alpha()
+        self.background = pygame.transform.scale_by(self.background, 3)
+        self.background_rect = self.background.get_rect()
+        self.background_rect.topleft = (0, 0)
+        self.traversable_zone = pygame.Rect(0, 100, 1200*3, 140*3)
+    def update(self, screen):
+        screen.blit(self.background, self.background_rect)
