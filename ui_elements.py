@@ -20,7 +20,6 @@ class Menu:
             item.rect = item.image.get_rect()
             item.rect.center = item.position
 
-
     def update(self):
         mouse_state = pygame.mouse.get_pressed()
         mouse_pos = pygame.mouse.get_pos()
@@ -39,3 +38,26 @@ class Menu:
             self.screen.blit(item.image, item.rect)
         
         pygame.display.update()
+
+class HealthBar:
+    def __init__(self, max_value):
+        self.max_value = max_value
+        self.surf = pygame.Surface((200, 30))
+        self.position = (40, 40)
+        self.surf.fill("green")
+        self.text = f"Health: {self.max_value}"
+
+        self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", size=64)
+
+    def update(self, new_value, screen):
+        self.value = new_value
+        self.surf = pygame.Surface((new_value/self.max_value * 200, 30))
+        self.surf.fill("green")
+
+        self.text = f"Health: {self.value}"
+
+        self.textsurf = self.font.render(self.text, False, "white")
+        self.textpos = (20,20)
+
+        screen.blit(self.surf, self.position)
+        screen.blit(self.textsurf, self.textpos)

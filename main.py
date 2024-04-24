@@ -5,55 +5,82 @@ Spring 2024
 Computer Seminar I final project
 '''
 
-import random
 import sys
 import pygame
-from entities import Enemy, Map
-from entities import Player
-from ui_elements import Menu
+from entities import Enemy, Player
+from game_management import Stage, Map
+from ui_elements import HealthBar, Menu
 
 pygame.init()
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 
+STAGES = [
+    Level()
+]
+
 class Level:
-    def __init__(self, map, total_enemies):
-        self.enemies = []
+    def __init__(self, player_health, number_of_enemies, enemies_damage):
+        # Initialize sprite groups
+        self.enemies = pygame.sprite.Group()
+        self.protags = pygame.sprite.Group()
 
-        player = Player()
-        player.rect.left = 500
-        player.rect.top = 500
+        self.player = Player(player_health)
+        self.player.rect.left = 50
+        self.player.rect.centery = 360
+
+        for i in range(number_of_enemies):
+            enemy = Enemy()
+            self.enemies.add()
+
+    def __init__(self, stage):
+        print("init called")
+        self.stage = stage
         
-        for _ in range(total_enemies):
-            enemy = Enemy((random.randint(40, 1240), random.randint(20, 700)))
-            self.enemies.append(enemy)
-
-        self.map = map
-        self.player = player
-        self.game_state = None
-
-    def begin(self, stage):
-        print("beginning level")
+        # Initialize sprite groups
+        self.enemies = pygame.sprite.Group()
+        self.protags = pygame.sprite.Group()
         
+        # Clean up previous level
+        self.enemies.empty()
+        self.protags.empty()
+
+        self.player = Player()
+        self.player.rect.left = 500
+        self.player.rect.top = 500
+        self.protags.add(self.player)
+
+        # Construct level parameters
+        for enemy in STAGES[stage].enemies:
+            self.enemies.add(enemy)
+        self.player.health = STAGES[stage].player_health
+
+        # Construct UI elements
+        self.health_bar = HealthBar(self.player.health)
+
+        # Load new map
+        self.map = STAGES[stage].map
+
         self.game_state = "play"
 
     def restart(self):
         # Start from the beginning of current level
-        self.game_state = "play"
+        self.__init__(self.stage)
 
     def resume(self):
         self.game_state = "play"
 
-    def update(self, window, map):
+    def update(self, window):
+        # Update all entities
         window.screen.fill("black")
-        map.update(window.screen)
-        for enemy in self.enemies:
-            enemy.update(window.screen, self.player)
-        self.player.update(window, self.enemies)
+        self.map.update(window.screen)
+        self.enemies.update(window.screen, self.player)
+        self.protags.update(window, self.enemies)
 
-        # Cull dead enemies
-        # self.enemies[:] = [enemy for enemy in self.enemies if enemy.is_alive]
-        # pygame.display.update()
+        # Update UI elements
+        self.health_bar.update(self.player.health, window.screen)
+
+        pygame.display.update()
 
 class Window:
     def __init__(self, dimensions, window_title):
@@ -61,19 +88,23 @@ class Window:
         pygame.display.set_caption(window_title)
         self.traversable_rect = pygame.Rect(0, 0, dimensions[0], dimensions[1])
 
+def start_level(stage):
+    return Level(stage=stage)
+
 def quit_game():
     pygame.quit()
     sys.exit()
 
+game_window = Window((1280, 720), "Fighter Game")
+
 def main():
-    game_window = Window((1280, 720), "Fighter Game")
     clock = pygame.time.Clock()
-    frames_per_second = 60
-    game_map = Map("./resources/preview_stage.png")
+    frames_per_second = 30
 
-    level = Level(game_map, 1)
+    current_level = 0
+    level = start_level(current_level)
 
-    pause_menu_items = [Menu.MenuItems("./resources/UI/restart.png", (640, 360),level.restart),
+    pause_menu_items = [Menu.MenuItems("./resources/UI/restart.png", (640, 360), level.restart),
                         Menu.MenuItems("./resources/UI/quit.png", (640, 500), quit_game)]
     pause_menu = Menu(game_window.screen, "./resources/UI/pause_menu.png", pause_menu_items)
 
@@ -130,7 +161,7 @@ def main():
         if level.game_state == "game over":
             game_over_menu.update()
         elif level.game_state == "play":
-            level.update(game_window, game_map)
+            level.update(game_window)
             if level.player.health <= 0:
                 print("game over")
                 level.game_state = "game over"
