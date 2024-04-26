@@ -14,7 +14,7 @@ class LinearAnimation:
 
         self.period = len(self.frames)
         self.animation_speed = 0.4
-    
+
     def animate(self):
         if self.last_frame_shown == True:
             self.last_frame_shown = False
@@ -23,9 +23,9 @@ class LinearAnimation:
             self.actor.surf = self.frames[frame_to_show]
         else:
             self.actor.surf = self.flipped_frames[frame_to_show]
-        
+
         self.frame_index += 1
-        
+
         if len(self.frames) == int(self.frame_index * self.animation_speed):
             self.last_frame_shown = True
             self.frame_index = 0
@@ -163,12 +163,12 @@ class Attack:
             self.animation.frame_index += 1
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, health):
+    def __init__(self, health, initial_position):
         pygame.sprite.Sprite.__init__(self)
         self.facing = "right"
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert_alpha(), (300, 200))
-        self.rect = pygame.Rect(20, 700-180, 58, 150)
+        self.rect = pygame.Rect(initial_position, (58, 150))
         self.debugsurf = pygame.Surface((58, 150))
         self.state = "idle"
         self.current_attack = None
@@ -209,7 +209,7 @@ class Player(pygame.sprite.Sprite):
         # Attacks
         self.light_attack = Attack(self, 80, 20, 15, self.lt_atk_animation)
         self.heavy_attack = Attack(self, 80, 32, 20, self.hv_atk_animation)
-        
+
 
     def update(self, window, enemies):
         if self.state in ["idle", "walk"]:
@@ -227,7 +227,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.centery += -self.movement_speed
                 elif self.down_pressed and not self.up_pressed:
                     self.rect.centery += self.movement_speed
-           
+
                 self.walk_animation.animate()
 
                 if not window.traversable_rect.contains(self.rect):
@@ -241,7 +241,7 @@ class Player(pygame.sprite.Sprite):
                 self.light_attack.queue()
             elif self.hv_atk_pressed:
                 self.heavy_attack.queue()
-        
+
         elif self.state == "hurt":
             if self.health <= 0:
                 self.kill()
@@ -252,13 +252,13 @@ class Player(pygame.sprite.Sprite):
 
         elif self.state == "windup":
             self.current_attack.windup()
-        
+
         elif self.state == "linger":
             self.current_attack.linger(enemies)
-        
+
         elif self.state == "cooldown":
             self.current_attack.cooldown()
-        
+
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
 
         window.screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
@@ -266,7 +266,10 @@ class Player(pygame.sprite.Sprite):
             object.update()
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, initial_position):
+    def __init__(self, initial_position, damage):
+        self.initial_position = initial_position
+        self.damage = damage
+
         pygame.sprite.Sprite.__init__(self)
         self.facing = "left"
         self.is_alive = True
@@ -297,7 +300,7 @@ class Enemy(pygame.sprite.Sprite):
                                                 linger_frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Punch/punch{i}.png") for i in [3, 3]],
                                                 cooldown_frames = [pygame.image.load(f"./resources/Sprites/Enemy-Punk/Punch/punch{i}.png") for i in [2, 2, 2, 1, 1, 1, 1, 1]]
                                                 )
-        
+
         # Hurt animation
         self.hurt_animation = LinearAnimation(self,
                                             frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Hurt/hurt{i}.png") for i in [1, 2, 2, 1]])
@@ -305,17 +308,20 @@ class Enemy(pygame.sprite.Sprite):
         # KO animation
         self.knockout_animation = LinearAnimation(self,
                                                 frames=[pygame.image.load(f"./resources/Sprites/Enemy-Punk/Hurt/hurt{i}.png") for i in range(1,5)])
-        
+
         # Attacks
-        self.attack = Attack(self, 60, 15, 5, self.atk_animation)
-        
+        self.attack = Attack(self, 60, 15, damage, self.atk_animation)
+
+    def copy(self):
+        return Enemy(self.initial_position, self.damage)
+
     def update(self, screen, player):
         # Get current distance to player
         x_distance_to_player = self.rect.centerx - player.rect.centerx
         y_distance_to_player = self.rect.centery - player.rect.centery
         distance_to_player = math.sqrt(x_distance_to_player**2 + y_distance_to_player**2)
         abs_x_distance = math.sqrt(x_distance_to_player**2)
-        
+
         # Check if player is inside detection zone
         if self.state in ["idle", "walk"]:
             if distance_to_player < 300 and abs_x_distance > 65:
@@ -357,13 +363,13 @@ class Enemy(pygame.sprite.Sprite):
 
         elif self.state == "windup":
             self.current_attack.windup()
-        
+
         elif self.state == "linger":
             self.current_attack.linger([player])
-        
+
         elif self.state == "cooldown":
             self.current_attack.cooldown()
-        
+
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
 
         # DEBUGGING ONLY
