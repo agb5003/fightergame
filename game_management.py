@@ -23,8 +23,6 @@ class Level:
         for enemy in self.enemies_data:
             self.enemies.add(enemy.copy())
 
-        print(self.enemies_data)
-
         # Construct UI elements
         self.health_bar = HealthBar(self.player_max_health)
 
