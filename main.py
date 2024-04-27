@@ -6,11 +6,10 @@ Computer Seminar I final project
 '''
 
 import sys
-import random
 import pygame
-from entities import Enemy, Player
+from entities import Enemy
 from game_management import Map, Level
-from ui_elements import HealthBar, Menu
+from ui_elements import Menu
 
 pygame.init()
 SCREEN_WIDTH = 1280
@@ -20,7 +19,6 @@ class Window:
     def __init__(self, dimensions, window_title):
         self.screen = pygame.display.set_mode((dimensions[0], dimensions[1]))
         pygame.display.set_caption(window_title)
-        self.traversable_rect = pygame.Rect(0, 0, dimensions[0], dimensions[1])
 
 def quit_game():
     pygame.quit()
@@ -30,15 +28,15 @@ game_window = Window((1280, 720), "Fighter Game")
 
 def main():
     clock = pygame.time.Clock()
-    frames_per_second = 60
+    frames_per_second = 30
 
-    level = Level(Map("./resources/preview_stage.png"),
-    player_health=100, player_initial_position=(40, 200), enemies=[
-        Enemy((40, 150), 5),
-        Enemy((800, 250), 5),
-        Enemy((1000, 350), 5),
-        Enemy((200, 580), 5),
-        Enemy((340, 350), 5)
+    level = Level(Map("./resources/cyberpunk-street-files/Version 1/PNG/cyberpunk-street.png", 3.75, pygame.Rect(0, 450, 2280, SCREEN_HEIGHT-450)),
+    player_health=100, player_initial_position=(40, 400), enemies=[
+        Enemy((40, 450), 5),
+        Enemy((800, 350), 5)
+        # Enemy((1000, 390), 5),
+        # Enemy((200, 480), 5),
+        # Enemy((340, 350), 5)
     ],
     )
 
@@ -99,7 +97,7 @@ def main():
         if level.game_state == "game over":
             game_over_menu.update()
         elif level.game_state == "play":
-            level.update(game_window)
+            level.update(game_window.screen)
             if level.player.health <= 0:
                 print("game over")
                 level.game_state = "game over"

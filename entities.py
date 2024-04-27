@@ -164,7 +164,7 @@ class Attack:
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, health, initial_position):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.facing = "right"
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert_alpha(), (300, 200))
@@ -211,7 +211,7 @@ class Player(pygame.sprite.Sprite):
         self.heavy_attack = Attack(self, 80, 32, 20, self.hv_atk_animation)
 
 
-    def update(self, window, enemies):
+    def update(self, enemies, map):
         if self.state in ["idle", "walk"]:
             if self.left_pressed or self.up_pressed or self.down_pressed or self.right_pressed:
                 self.state = "walk"
@@ -230,8 +230,8 @@ class Player(pygame.sprite.Sprite):
 
                 self.walk_animation.animate()
 
-                if not window.traversable_rect.contains(self.rect):
-                    self.rect.clamp_ip(window.traversable_rect)
+                if not map.traversable_rect.contains(self.rect):
+                    self.rect.clamp_ip(map.traversable_rect)
             else:
                 self.state = "idle"
                 self.idle_animation.animate()
@@ -261,16 +261,20 @@ class Player(pygame.sprite.Sprite):
 
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
 
-        window.screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
         for object in self.child_objects:
             object.update()
+
+        # DEBUG ONLY
+        # pygame.draw.rect(pygame.display.get_surface(), "red", self.rect)
+
+        # screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, initial_position, damage):
         self.initial_position = initial_position
         self.damage = damage
 
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.facing = "left"
         self.is_alive = True
         self.health = 50
@@ -285,7 +289,7 @@ class Enemy(pygame.sprite.Sprite):
         self.state = "idle"
         self.current_attack = None
 
-        self.movement_speed = 3
+        self.movement_speed = 2
 
 
         # Idle animations
@@ -317,7 +321,7 @@ class Enemy(pygame.sprite.Sprite):
         # from the beginning.
         return Enemy(self.initial_position, self.damage)
 
-    def update(self, screen, player):
+    def update(self, player):
         # Get current distance to player
         x_distance_to_player = self.rect.centerx - player.rect.centerx
         y_distance_to_player = self.rect.centery - player.rect.centery
@@ -327,7 +331,7 @@ class Enemy(pygame.sprite.Sprite):
 
         # Check if player is inside detection zone
         if self.state in ["idle", "walk"]:
-            if distance_to_player < 300 and abs_x_distance > 65:
+            if distance_to_player < 300 and (abs_x_distance > 65 or abs_y_distance > 10):
                 if x_distance_to_player < 0:
                     self.facing = "right"
                 elif x_distance_to_player > 0:
@@ -378,6 +382,7 @@ class Enemy(pygame.sprite.Sprite):
         # DEBUGGING ONLY
         # screen.blit(self.debugsurf, self.rect)
 
-        screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
         for object in self.child_objects:
             object.update()
+
+        # screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
