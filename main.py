@@ -30,14 +30,14 @@ game_window = Window((1280, 720), "Fighter Game")
 
 def main():
     clock = pygame.time.Clock()
-    frames_per_second = 30
+    frames_per_second = 60
 
     level = Level(Map("./resources/preview_stage.png"),
     player_health=100, player_initial_position=(40, 200), enemies=[
         Enemy((40, 150), 5),
-        Enemy((80, 250), 5),
-        Enemy((10, 350), 5),
-        Enemy((20, 580), 5),
+        Enemy((800, 250), 5),
+        Enemy((1000, 350), 5),
+        Enemy((200, 580), 5),
         Enemy((340, 350), 5)
     ],
     )

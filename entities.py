@@ -313,6 +313,8 @@ class Enemy(pygame.sprite.Sprite):
         self.attack = Attack(self, 60, 15, damage, self.atk_animation)
 
     def copy(self):
+        # This method is used to copy enemy data to the level when it is started
+        # from the beginning.
         return Enemy(self.initial_position, self.damage)
 
     def update(self, screen, player):
@@ -321,6 +323,7 @@ class Enemy(pygame.sprite.Sprite):
         y_distance_to_player = self.rect.centery - player.rect.centery
         distance_to_player = math.sqrt(x_distance_to_player**2 + y_distance_to_player**2)
         abs_x_distance = math.sqrt(x_distance_to_player**2)
+        abs_y_distance = math.sqrt(y_distance_to_player**2)
 
         # Check if player is inside detection zone
         if self.state in ["idle", "walk"]:
@@ -334,7 +337,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.state = "idle"
 
         if self.state == "idle":
-            if abs_x_distance <= 65:
+            if abs_x_distance <= 65 and abs_y_distance <= 10:
                 self.attack.queue()
             else:
                 self.idle_animation.animate()
