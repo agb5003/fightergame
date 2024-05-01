@@ -1,16 +1,25 @@
 import pygame
 
 class Menu:
-    class MenuItems:
+    class MenuItem:
         def __init__(self, image, position, function=None):
             self.image = pygame.image.load(image).convert_alpha()
             self.function = function
             self.position = position
+    class MenuItemTextOnly:
+        def __init__(self, text, position, function=None):
+            self.text = text
+            self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", 64)
+            self.image = self.font.render(self.text, False, "white")
+            self.function = function
+            self.position = position
+
     def __init__(self, screen, background_image, items):
         self.screen = screen
         self.SCREEN_WIDTH = screen.get_width()
         self.SCREEN_HEIGHT = screen.get_height()
         self.background = pygame.image.load(background_image).convert_alpha()
+        self.background.set_alpha(150)
         self.background_rect = self.background.get_rect()
         self.background_rect.center = (self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/2)
 
@@ -50,7 +59,7 @@ class HealthBar:
         self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", size=64)
 
     def update(self, new_value, screen):
-        self.value = new_value
+        self.value = max(new_value, 0)
         self.surf = pygame.Surface((new_value/self.max_value * 200, 30))
         self.surf.fill("green")
 
@@ -61,3 +70,30 @@ class HealthBar:
 
         screen.blit(self.surf, self.position)
         screen.blit(self.textsurf, self.textpos)
+
+class RollingScreen:
+    class RollingScreenItem:
+        def __init__(self, text):
+            font = pygame.font.Font("./resources/UI/pixeltype.ttf", 56)
+            self.surf = font.render(text, False, "white")
+            self.rect = self.surf.get_rect()
+    def __init__(self, items):
+        self.halfw = pygame.display.get_surface().get_width()//2
+        height = pygame.display.get_surface().get_height()
+        self.topmost_y_position = height
+        self.items = items
+    def update(self, screen):
+        screen.fill("black")
+        offset = 0
+        for item in self.items:
+            item.rect.centerx = self.halfw
+            item.rect.centery = self.topmost_y_position + offset
+            offset += 50
+
+            screen.blit(item.surf, item.rect)
+        
+        self.topmost_y_position -= 1
+        pygame.display.update()
+
+        
+
