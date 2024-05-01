@@ -277,7 +277,8 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__()
         self.facing = "left"
         self.is_alive = True
-        self.health = 50
+        self.max_health = 50
+        self.health = self.max_health
         self.child_objects = []
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Enemy-Punk/Idle/idle1.png").convert_alpha(), (300, 200))
@@ -349,9 +350,11 @@ class Enemy(pygame.sprite.Sprite):
 
         elif self.state == "hurt":
             if self.health <= 0:
-                self.knockout_animation.animate()
                 if self.knockout_animation.last_frame_shown:
-                    self.kill()
+                    pass
+                else:
+                    self.knockout_animation.animate()
+                    # self.kill()
             else:
                 self.hurt_animation.animate()
                 if self.hurt_animation.last_frame_shown:

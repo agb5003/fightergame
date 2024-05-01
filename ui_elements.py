@@ -2,16 +2,18 @@ import pygame
 
 class Menu:
     class MenuItem:
-        def __init__(self, image, position, function=None):
+        def __init__(self, image, position, function=None, function_parameters=None):
             self.image = pygame.image.load(image).convert_alpha()
             self.function = function
+            self.function_parameters = function_parameters
             self.position = position
     class MenuItemTextOnly:
-        def __init__(self, text, position, function=None):
+        def __init__(self, text, position, function=None, function_parameters=None):
             self.text = text
             self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", 64)
             self.image = self.font.render(self.text, False, "white")
             self.function = function
+            self.function_parameters = function_parameters
             self.position = position
 
     def __init__(self, screen, background_image, items):
@@ -37,7 +39,10 @@ class Menu:
             if item.rect.collidepoint(mouse_pos):
                 item.image.set_alpha(100)
                 if mouse_state[0]:
-                    item.function()
+                    if item.function_parameters:
+                        item.function(*item.function_parameters)
+                    else:
+                        item.function()
             else:
                 item.image.set_alpha(255)
 
