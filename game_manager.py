@@ -3,34 +3,6 @@ import pygame
 from entities import Enemy, Player
 from ui_elements import HealthBar
 
-# LEVEL_DATA = {
-#     "1": {
-#         "map": "./resources/cyberpunk-street-files/Version 1/PNG/cyberpunk-street.png",
-#         "scale": 3.75,
-#         "traversable_area": [0, 450, 2280, 270],
-#         "player_health": 100,
-#         "player_initial_position": [40, 400],
-#         "enemy_positions": [
-#             [40,450],
-#             [800, 350],
-#         ],
-#         "enemy_damage": 5
-#     },
-#     "2": {
-#         "map": "./resources/Miami-synth-files/Layers/highway.png",
-#         "scale": 3,
-#         "traversable_area": [0, 400, 2688, 320],
-#         "player_health": 100,
-#         "player_initial_position": [40, 400],
-#         "enemy_positions": [
-#             [400, 550],
-#             [1200, 650],
-#             [1000, 490]
-#         ],
-#         "enemy_damage": 10
-#     }
-# }
-
 class GameInstance:
     def __init__(self, screen_dimensions, window_title):
         self.screen = pygame.display.set_mode(screen_dimensions)
@@ -42,10 +14,18 @@ class GameInstance:
         self.game_state = "start screen"
         self.current_stage = 1
         self.current_level = Level(self)
-    def start_stage(self, stage):
-        self.current_stage = stage
+    def goto_next_stage(self):
+        self.current_stage += 1
+        print(f"current_stage is now {self.current_stage}")
         self.current_level = Level(self)
-        self.game_state = "play"
+        self.current_level.start_from_beginning()
+    def restart_stage(self):
+        self.current_level = Level(self)
+        self.current_level.start_from_beginning()
+    def return_to_start_screen(self):
+        self.current_stage = 1
+        self.game_state = "start screen"
+
 
 class Level:
     def __init__(self, game_instance):
@@ -73,18 +53,17 @@ class Level:
         self.player.rect.topleft = self.player_initial_position
         self.camera_group.add(self.player)
 
-        print(self.enemies_data)
         for enemy in self.enemies_data:
             enemy_copy = enemy.copy()
             self.enemies.append(enemy_copy)
             self.camera_group.add(enemy_copy)
-        print(self.enemies)
         
         # Construct UI elements
         self.health_bar = HealthBar(self.player_max_health)
 
         # Start gameplay
         self.game_instance.game_state = "play"
+        print(f"player health is now {self.player.health}, enemies are {self.enemies}, enemy health {[enemy.health for enemy in self.enemies]}")
 
     def resume(self):
         self.game_state = "play"
@@ -96,10 +75,11 @@ class Level:
             enemy.update(self.player)
         self.player.update(self.enemies, self.map)
 
+        # Draw map and entities
+        self.camera_group.custom_draw(self.player, self.map)
+
         # Update UI elements
         self.health_bar.update(self.player.health, screen)
-
-        self.camera_group.custom_draw(self.player, self.map)
 
         # Check win condition
         alive_enemies = [enemy for enemy in self.enemies if enemy.health > 0]
@@ -126,7 +106,7 @@ class CameraGroup(pygame.sprite.Group):
         self.screen = pygame.display.get_surface()
 
         # Camera box
-        self.camera_boundaries = {"left": 150, "right": 150}
+        self.camera_boundaries = {"left": 200, "right": 200}
         self.camera_rect = pygame.Rect(self.camera_boundaries["left"], 0, self.screen.get_width() - (self.camera_boundaries["left"] + self.camera_boundaries["right"]), self.screen.get_height())
 
         self.offset = pygame.math.Vector2(self.camera_boundaries["left"],0)

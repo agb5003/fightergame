@@ -7,6 +7,7 @@ class Menu:
             self.function = function
             self.function_parameters = function_parameters
             self.position = position
+            self.pressed = False
     class MenuItemTextOnly:
         def __init__(self, text, position, function=None, function_parameters=None):
             self.text = text
@@ -15,6 +16,7 @@ class Menu:
             self.function = function
             self.function_parameters = function_parameters
             self.position = position
+            self.pressed = False
 
     def __init__(self, screen, background_image, items):
         self.screen = screen
@@ -39,10 +41,13 @@ class Menu:
             if item.rect.collidepoint(mouse_pos):
                 item.image.set_alpha(100)
                 if mouse_state[0]:
+                    item.pressed = True
+                elif (not mouse_state[0]) and item.pressed:
                     if item.function_parameters:
                         item.function(*item.function_parameters)
                     else:
                         item.function()
+                    item.pressed = False
             else:
                 item.image.set_alpha(255)
 
@@ -87,18 +92,32 @@ class RollingScreen:
         height = pygame.display.get_surface().get_height()
         self.topmost_y_position = height
         self.items = items
-    def update(self, screen):
-        screen.fill("black")
+        self.items_opacity = 255
+        self.last_item_centery = 0
+    def update(self, game_instance):
+        game_instance.screen.fill("black")
         offset = 0
+
+        half_screen_height = game_instance.screen.get_height()//2
+        if self.last_item_centery < half_screen_height:
+            if self.items_opacity - 10 > 0:
+                self.items_opacity -= 4
+            else:
+                self.items_opacity = 0
+
         for item in self.items:
             item.rect.centerx = self.halfw
             item.rect.centery = self.topmost_y_position + offset
             offset += 50
+            self.last_item_centery = item.rect.centery
 
-            screen.blit(item.surf, item.rect)
+            item.surf.set_alpha(self.items_opacity)
+
+            game_instance.screen.blit(item.surf, item.rect)
         
-        self.topmost_y_position -= 1
+        if self.last_item_centery < 0:
+            game_instance.game_state = "start screen"
+        
+        self.topmost_y_position -= 2
         pygame.display.update()
-
-        
 
