@@ -1,5 +1,5 @@
 {
-    "0": {
+    "1": {
         "map": "./resources/cyberpunk-street-files/Version 1/PNG/cyberpunk-street.png",
         "scale": 3.75,
         "traversable_area": [0, 450, 2280, 270],
@@ -11,7 +11,7 @@
         ],
         "enemy_damage": 5
     },
-    "1": {
+    "2": {
         "map": "./resources/Miami-synth-files/Layers/highway.png",
         "scale": 3,
         "traversable_area": [0, 400, 2280, 320],
