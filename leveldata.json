@@ -6,21 +6,26 @@
         "player_health": 100,
         "player_initial_position": [40, 450],
         "enemy_positions": [
-            [400,450],
-            [1500, 650]
+            [400,480],
+            [800, 550],
+            [1200, 530],
+            [1800, 470]
         ],
         "enemy_damage": 5
     },
     "2": {
         "map": "./resources/Miami-synth-files/Layers/highway.png",
         "scale": 3,
-        "traversable_area": [0, 400, 2280, 320],
-        "player_health": 200,
+        "traversable_area": [0, 400, 2688, 320],
+        "player_health": 100,
         "player_initial_position": [40, 400],
         "enemy_positions": [
-            [240, 450],
-            [1800, 350],
-            [2200, 390]
+            [440, 450],
+            [780, 450],
+            [1500, 490],
+            [2100, 500],
+            [2200, 470],
+            [2300, 470]
         ],
         "enemy_damage": 10
     }

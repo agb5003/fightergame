@@ -16,16 +16,11 @@ class GameInstance:
         self.current_level = Level(self)
     def goto_next_stage(self):
         self.current_stage += 1
-        print(f"current_stage is now {self.current_stage}")
         self.current_level = Level(self)
         self.current_level.start_from_beginning()
     def restart_stage(self):
         self.current_level = Level(self)
         self.current_level.start_from_beginning()
-    def return_to_start_screen(self):
-        self.current_stage = 1
-        self.game_state = "start screen"
-
 
 class Level:
     def __init__(self, game_instance):
@@ -45,7 +40,6 @@ class Level:
         self.map = Map(current_stage_data["map"], current_stage_data["scale"], pygame.Rect(*current_stage_data["traversable_area"]))
 
     def start_from_beginning(self):
-        print(f"Starting from the beginning of stage {self.game_instance.current_stage}")
         # Reset entities and sprite groups
         self.camera_group.empty()
         self.enemies = []
@@ -63,7 +57,6 @@ class Level:
 
         # Start gameplay
         self.game_instance.game_state = "play"
-        print(f"player health is now {self.player.health}, enemies are {self.enemies}, enemy health {[enemy.health for enemy in self.enemies]}")
 
     def resume(self):
         self.game_state = "play"
@@ -83,7 +76,8 @@ class Level:
 
         # Check win condition
         alive_enemies = [enemy for enemy in self.enemies if enemy.health > 0]
-        if alive_enemies == []:
+        knocked_out_enemies = [enemy for enemy in self.enemies if enemy.knockout_animation.last_frame_shown]
+        if len(knocked_out_enemies) == len(self.enemies_data):
             self.game_instance.game_state = "won"
         
         # Check player health
@@ -128,11 +122,13 @@ class CameraGroup(pygame.sprite.Group):
 
         # Compensate for transparent space in entity PNG files
         entity_offset = pygame.math.Vector2(120, 50)
+        shadow_offset = pygame.math.Vector2(105, 175)
 
         self.screen.blit(map.background, map_offset)
 
         # Draw entities
         for entity in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             offset_position = entity.rect.topleft - self.offset - entity_offset
+            self.screen.blit(entity.shadow_surf, offset_position + shadow_offset)
             self.screen.blit(entity.surf, offset_position)
 

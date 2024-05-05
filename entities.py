@@ -168,6 +168,7 @@ class Player(pygame.sprite.Sprite):
         self.facing = "right"
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert_alpha(), (300, 200))
+        self.shadow_surf = pygame.transform.scale_by(pygame.image.load("./resources/Sprites/shadow.png").convert_alpha(), 4)
         self.rect = pygame.Rect(initial_position, (58, 150))
         self.debugsurf = pygame.Surface((58, 150))
         self.state = "idle"
@@ -264,11 +265,6 @@ class Player(pygame.sprite.Sprite):
         for object in self.child_objects:
             object.update()
 
-        # DEBUG ONLY
-        # pygame.draw.rect(pygame.display.get_surface(), "red", self.rect)
-
-        # screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))
-
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, initial_position, damage):
         self.initial_position = initial_position
@@ -282,6 +278,7 @@ class Enemy(pygame.sprite.Sprite):
         self.child_objects = []
 
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Enemy-Punk/Idle/idle1.png").convert_alpha(), (300, 200))
+        self.shadow_surf = pygame.transform.scale_by(pygame.image.load("./resources/Sprites/shadow.png").convert_alpha(), 4)
 
         # self.debugsurf = pygame.Surface((80, 150))
         # self.rect = self.debugsurf.get_rect()

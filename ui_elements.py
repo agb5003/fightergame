@@ -115,9 +115,6 @@ class RollingScreen:
 
             game_instance.screen.blit(item.surf, item.rect)
         
-        if self.last_item_centery < 0:
-            game_instance.game_state = "start screen"
-        
         self.topmost_y_position -= 2
         pygame.display.update()
 
