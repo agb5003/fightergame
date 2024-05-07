@@ -2,7 +2,7 @@
     "1": {
         "map": "./resources/cyberpunk-street-files/Version 1/PNG/cyberpunk-street.png",
         "scale": 3.75,
-        "traversable_area": [0, 450, 2280, 270],
+        "traversable_height": 270,
         "player_health": 100,
         "player_initial_position": [40, 450],
         "enemy_positions": [
@@ -16,7 +16,7 @@
     "2": {
         "map": "./resources/Miami-synth-files/Layers/highway.png",
         "scale": 3,
-        "traversable_area": [0, 400, 2688, 320],
+        "traversable_height": 320,
         "player_health": 100,
         "player_initial_position": [40, 400],
         "enemy_positions": [

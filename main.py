@@ -20,22 +20,24 @@ def quit_game():
 
 def main():
     def setup():
-        game_instance = GameInstance((1280, 720), "Sendai 11PM")
+        game_instance = GameInstance((SCREEN_WIDTH, SCREEN_HEIGHT), "Sendai 11PM")
 
-        start_menu_items = [Menu.MenuItemTextOnly("Start Game", (640, 360), game_instance.current_level.start_from_beginning),
-                            Menu.MenuItemTextOnly("Quit", (640, 500), quit_game)]
-        start_menu = Menu(game_instance.screen, "./resources/UI/start_screen.png", start_menu_items)
+        start_menu_items = [Menu.MenuItem("Start Game", (640, 350), game_instance.current_level.start_from_beginning),
+                            Menu.MenuItem("Quit", (640, 450), quit_game)]
+        start_menu = Menu("./resources/UI/start_screen.png", start_menu_items)
 
-        continue_menu_items = [Menu.MenuItemTextOnly("Next level", (640, 360), game_instance.goto_next_stage)]
-        continue_menu = Menu(game_instance.screen, "./resources/UI/level_cleared.png", continue_menu_items)
+        continue_menu_items = [Menu.MenuItem("Next level", (640, 350), game_instance.goto_next_stage),
+                               Menu.MenuItem("Restart level", (640, 450), game_instance.restart_stage),]
+        continue_menu = Menu("./resources/UI/level_cleared.png", continue_menu_items)
 
-        pause_menu_items = [Menu.MenuItemTextOnly("Restart level", (640, 360), game_instance.restart_stage),
-                            Menu.MenuItemTextOnly("Quit to desktop", (640, 500), quit_game)]
-        pause_menu = Menu(game_instance.screen, "./resources/UI/pause_menu.png", pause_menu_items)
+        pause_menu_items = [Menu.MenuItem("Resume", (640, 350), game_instance.resume),
+                            Menu.MenuItem("Restart level", (640, 450), game_instance.restart_stage),
+                            Menu.MenuItem("Quit to desktop", (640, 550), quit_game)]
+        pause_menu = Menu("./resources/UI/pause_menu.png", pause_menu_items)
 
-        game_over_menu_items = [Menu.MenuItemTextOnly("Restart level", (640, 360), game_instance.restart_stage),
-                                Menu.MenuItemTextOnly("Quit to desktop", (640, 500), quit_game)]
-        game_over_menu = Menu(game_instance.screen, "./resources/UI/game_over.png", game_over_menu_items)
+        game_over_menu_items = [Menu.MenuItem("Restart level", (640, 350), game_instance.restart_stage),
+                                Menu.MenuItem("Quit to desktop", (640, 450), quit_game)]
+        game_over_menu = Menu("./resources/UI/game_over.png", game_over_menu_items)
 
         credits_items = [
             RollingScreen.RollingScreenItem("Project Director"),
@@ -72,21 +74,22 @@ def main():
                     elif game_instance.game_state == "pause":
                         game_instance.game_state = "play"
 
-                if event.key == pygame.K_w:
-                    game_instance.current_level.player.up_pressed = True
-                if event.key == pygame.K_a:
-                    game_instance.current_level.player.left_pressed = True
-                if event.key == pygame.K_s:
-                    game_instance.current_level.player.down_pressed = True
-                if event.key == pygame.K_d:
-                    game_instance.current_level.player.right_pressed = True
+                if game_instance.game_state == "play":
+                    if event.key == pygame.K_w:
+                        game_instance.current_level.player.up_pressed = True
+                    if event.key == pygame.K_a:
+                        game_instance.current_level.player.left_pressed = True
+                    if event.key == pygame.K_s:
+                        game_instance.current_level.player.down_pressed = True
+                    if event.key == pygame.K_d:
+                        game_instance.current_level.player.right_pressed = True
 
-                if event.key == pygame.K_j:
-                    game_instance.current_level.player.lt_atk_pressed = True
-                if event.key == pygame.K_k:
-                    game_instance.current_level.player.hv_atk_pressed = True
+                    if event.key == pygame.K_j:
+                        game_instance.current_level.player.lt_atk_pressed = True
+                    if event.key == pygame.K_k:
+                        game_instance.current_level.player.hv_atk_pressed = True
 
-            elif event.type == pygame.KEYUP:
+            elif event.type == pygame.KEYUP and game_instance.game_state == "play":
                 if event.key == pygame.K_w:
                     game_instance.current_level.player.up_pressed = False
                 if event.key == pygame.K_a:
@@ -102,14 +105,11 @@ def main():
                     game_instance.current_level.player.hv_atk_pressed = False
         if game_instance.game_state == "quit": 
             quit_game()
-            break
         
         if game_instance.game_state == "start screen":
             start_menu.update()
-        elif game_instance.game_state == "game over":
-            game_over_menu.update()
         elif game_instance.game_state == "play":
-            game_instance.current_level.update(game_instance.screen)
+            game_instance.current_level.update()
         elif game_instance.game_state == "pause":
             pause_menu.update()
         elif game_instance.game_state == "won":
@@ -124,6 +124,8 @@ def main():
                     game_instance, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second = setup()
         elif game_instance.game_state == "continue screen":
             continue_menu.update()
+        elif game_instance.game_state == "game over":
+            game_over_menu.update()
 
 if __name__ == "__main__":
     main()

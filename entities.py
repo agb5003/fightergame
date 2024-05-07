@@ -2,7 +2,7 @@ import math
 import pygame
 
 class LinearAnimation:
-    last_frame_shown = False
+    is_last_frame_shown = False
     def __init__(self, actor, frames):
         self.actor = actor
         self.frame_index = 0
@@ -16,8 +16,8 @@ class LinearAnimation:
         self.animation_speed = 0.4
 
     def animate(self):
-        if self.last_frame_shown == True:
-            self.last_frame_shown = False
+        if self.is_last_frame_shown == True:
+            self.is_last_frame_shown = False
         frame_to_show = min(len(self.frames)-1, int(self.frame_index * self.animation_speed))
         if self.actor.facing == "right":
             self.actor.surf = self.frames[frame_to_show]
@@ -27,7 +27,7 @@ class LinearAnimation:
         self.frame_index += 1
 
         if len(self.frames) == int(self.frame_index * self.animation_speed):
-            self.last_frame_shown = True
+            self.is_last_frame_shown = True
             self.frame_index = 0
 
 
@@ -79,7 +79,6 @@ class AttackAnimation:
 class HitterBox:
     def __init__(self, parent, dimensions, attachpoint, linger):
         self.parent = parent
-        self.debugsurf = pygame.Surface(dimensions)
         self.rect = pygame.Rect((0,0), dimensions)
         self.linger = linger
         self.time_on_screen = 0
@@ -170,7 +169,6 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Brawler-Girl/Idle/idle1.png").convert_alpha(), (300, 200))
         self.shadow_surf = pygame.transform.scale_by(pygame.image.load("./resources/Sprites/shadow.png").convert_alpha(), 4)
         self.rect = pygame.Rect(initial_position, (58, 150))
-        self.debugsurf = pygame.Surface((58, 150))
         self.state = "idle"
         self.current_attack = None
 
@@ -248,7 +246,7 @@ class Player(pygame.sprite.Sprite):
                 self.kill()
             else:
                 self.hurt_animation.animate()
-                if self.hurt_animation.last_frame_shown:
+                if self.hurt_animation.is_last_frame_shown:
                     self.state = "idle"
 
         elif self.state == "windup":
@@ -280,9 +278,6 @@ class Enemy(pygame.sprite.Sprite):
         self.surf = pygame.transform.scale(pygame.image.load("./resources/Sprites/Enemy-Punk/Idle/idle1.png").convert_alpha(), (300, 200))
         self.shadow_surf = pygame.transform.scale_by(pygame.image.load("./resources/Sprites/shadow.png").convert_alpha(), 4)
 
-        # self.debugsurf = pygame.Surface((80, 150))
-        # self.rect = self.debugsurf.get_rect()
-        # self.rect.center = initial_position
         self.rect = pygame.Rect(initial_position, (80, 150))
         self.state = "idle"
         self.current_attack = None
@@ -347,14 +342,13 @@ class Enemy(pygame.sprite.Sprite):
 
         elif self.state == "hurt":
             if self.health <= 0:
-                if self.knockout_animation.last_frame_shown:
+                if self.knockout_animation.is_last_frame_shown:
                     pass
                 else:
                     self.knockout_animation.animate()
-                    # self.kill()
             else:
                 self.hurt_animation.animate()
-                if self.hurt_animation.last_frame_shown:
+                if self.hurt_animation.is_last_frame_shown:
                     self.state = "idle"
 
         elif self.state == "walk":
@@ -379,10 +373,7 @@ class Enemy(pygame.sprite.Sprite):
 
         self.child_objects = [object for object in self.child_objects if object.time_on_screen < object.linger]
 
-        # DEBUGGING ONLY
-        # screen.blit(self.debugsurf, self.rect)
 
         for object in self.child_objects:
             object.update()
 
-        # screen.blit(self.surf, (self.rect.centerx - 150, self.rect.top - 50))

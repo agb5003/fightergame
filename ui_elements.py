@@ -2,13 +2,6 @@ import pygame
 
 class Menu:
     class MenuItem:
-        def __init__(self, image, position, function=None, function_parameters=None):
-            self.image = pygame.image.load(image).convert_alpha()
-            self.function = function
-            self.function_parameters = function_parameters
-            self.position = position
-            self.pressed = False
-    class MenuItemTextOnly:
         def __init__(self, text, position, function=None, function_parameters=None):
             self.text = text
             self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", 64)
@@ -18,14 +11,13 @@ class Menu:
             self.position = position
             self.pressed = False
 
-    def __init__(self, screen, background_image, items):
-        self.screen = screen
-        self.SCREEN_WIDTH = screen.get_width()
-        self.SCREEN_HEIGHT = screen.get_height()
+    def __init__(self, background_image, items):
+        self.screen = pygame.display.get_surface()
+        self.screen_width = self.screen.get_width()
+        self.screen_height = self.screen.get_height()
         self.background = pygame.image.load(background_image).convert_alpha()
-        self.background.set_alpha(150)
         self.background_rect = self.background.get_rect()
-        self.background_rect.center = (self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/2)
+        self.background_rect.center = (self.screen_width/2, self.screen_height/2)
 
         # load images for menu items
         self.items = items
@@ -37,9 +29,13 @@ class Menu:
         mouse_state = pygame.mouse.get_pressed()
         mouse_pos = pygame.mouse.get_pos()
 
+        self.screen.blit(self.background, self.background_rect)
+
         for item in self.items:
+            displaypos = item.rect.topleft
             if item.rect.collidepoint(mouse_pos):
                 item.image.set_alpha(100)
+                displaypos = item.rect.topleft + pygame.math.Vector2(-5, 5)
                 if mouse_state[0]:
                     item.pressed = True
                 elif (not mouse_state[0]) and item.pressed:
@@ -49,37 +45,32 @@ class Menu:
                         item.function()
                     item.pressed = False
             else:
+                item.pressed = False
                 item.image.set_alpha(255)
-
-
-        self.screen.blit(self.background, self.background_rect)
-        for item in self.items:
-            self.screen.blit(item.image, item.rect)
+            self.screen.blit(item.image, displaypos)
+            
         
         pygame.display.update()
 
 class HealthBar:
     def __init__(self, max_value):
         self.max_value = max_value
-        self.surf = pygame.Surface((200, 30))
-        self.position = (40, 40)
-        self.surf.fill("green")
-        self.text = f"Health: {self.max_value}"
+        self.max_width = 300
+        self.height = 40
+        self.position = (20, 20)
 
-        self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", size=64)
+        self.font = pygame.font.Font("./resources/UI/pixeltype.ttf", size=56)
 
-    def update(self, new_value, screen):
+    def update(self, new_value):
         self.value = max(new_value, 0)
-        self.surf = pygame.Surface((new_value/self.max_value * 200, 30))
+        self.surf = pygame.Surface((self.value/self.max_value * self.max_width, self.height))
         self.surf.fill("green")
 
         self.text = f"Health: {self.value}"
 
-        self.textsurf = self.font.render(self.text, False, "white")
-        self.textpos = (20,20)
-
-        screen.blit(self.surf, self.position)
-        screen.blit(self.textsurf, self.textpos)
+        color = "white" if self.value > 20 else "red"
+        self.textsurf = self.font.render(self.text, False, color)
+        self.textpos = (26, 26)
 
 class RollingScreen:
     class RollingScreenItem:
@@ -96,8 +87,8 @@ class RollingScreen:
         self.last_item_centery = 0
     def update(self, game_instance):
         game_instance.screen.fill("black")
-        offset = 0
 
+        offset = 0
         half_screen_height = game_instance.screen.get_height()//2
         if self.last_item_centery < half_screen_height:
             if self.items_opacity - 10 > 0:

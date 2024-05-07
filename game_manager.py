@@ -21,32 +21,32 @@ class GameInstance:
     def restart_stage(self):
         self.current_level = Level(self)
         self.current_level.start_from_beginning()
+    def resume(self):
+        self.game_state = "play"
 
 class Level:
     def __init__(self, game_instance):
+        # Initialize all level-specific parameters
         self.game_instance = game_instance
         stage = self.game_instance.current_stage
-
+        # Load 
         current_stage_data = self.game_instance.level_data[str(stage)]
-
-        self.enemies = []
-        self.camera_group = CameraGroup()
 
         self.player_max_health = current_stage_data["player_health"]
         self.player_initial_position = current_stage_data["player_initial_position"]
         self.enemies_data = [Enemy(pos, current_stage_data["enemy_damage"]) for pos in current_stage_data["enemy_positions"]]
-        self.player = Player(0, (0,0))
 
-        self.map = Map(current_stage_data["map"], current_stage_data["scale"], pygame.Rect(*current_stage_data["traversable_area"]))
+        self.map = Map(current_stage_data["map"], current_stage_data["scale"], current_stage_data["traversable_height"])
 
     def start_from_beginning(self):
         # Reset entities and sprite groups
-        self.camera_group.empty()
-        self.enemies = []
+        self.camera_group = CameraGroup()
+        ## Create new Player object and add to camera group
         self.player = Player(self.player_max_health, self.player_initial_position)
         self.player.rect.topleft = self.player_initial_position
         self.camera_group.add(self.player)
-
+        ## Create new Enemy objects according to level_data and add to camera group
+        self.enemies = []
         for enemy in self.enemies_data:
             enemy_copy = enemy.copy()
             self.enemies.append(enemy_copy)
@@ -58,41 +58,37 @@ class Level:
         # Start gameplay
         self.game_instance.game_state = "play"
 
-    def resume(self):
-        self.game_state = "play"
-
-    def update(self, screen):
+    def update(self):
         # Update all entities
-        screen.fill("black")
         for enemy in self.enemies:
             enemy.update(self.player)
         self.player.update(self.enemies, self.map)
 
-        # Draw map and entities
-        self.camera_group.custom_draw(self.player, self.map)
-
         # Update UI elements
-        self.health_bar.update(self.player.health, screen)
+        self.health_bar.update(self.player.health)
 
         # Check win condition
-        alive_enemies = [enemy for enemy in self.enemies if enemy.health > 0]
-        knocked_out_enemies = [enemy for enemy in self.enemies if enemy.knockout_animation.last_frame_shown]
+        knocked_out_enemies = [enemy for enemy in self.enemies if enemy.knockout_animation.is_last_frame_shown]
         if len(knocked_out_enemies) == len(self.enemies_data):
             self.game_instance.game_state = "won"
         
         # Check player health
         if self.player.health <= 0:
             self.game_instance.game_state = "game over"
+        
+        # Draw everything
+        self.camera_group.camera_draw(self.player, self.map, [self.health_bar])
 
         pygame.display.update()
 
 class Map:
-    def __init__(self, background_image, scale, traversable_rect):
+    def __init__(self, background_image, scale, traversable_height):
         self.background = pygame.image.load(background_image).convert_alpha()
         self.background = pygame.transform.scale_by(self.background, scale)
         self.background_rect = self.background.get_rect()
         self.background_rect.topleft = (0, 0)
-        self.traversable_rect = traversable_rect
+        screen_height = pygame.display.get_surface().get_height()
+        self.traversable_rect = pygame.Rect(0, screen_height - traversable_height, self.background.get_width(), traversable_height)
 
 class CameraGroup(pygame.sprite.Group):
     def __init__(self):
@@ -113,7 +109,9 @@ class CameraGroup(pygame.sprite.Group):
 
         self.offset.x = self.camera_rect.left - self.camera_boundaries["left"]
 
-    def custom_draw(self, player, map):
+    def camera_draw(self, player, map, ui_elements):
+        # Fill background with purple to see visual bugs
+        self.screen.fill("green")
 
         self.move_camera(player, map)
 
@@ -131,4 +129,9 @@ class CameraGroup(pygame.sprite.Group):
             offset_position = entity.rect.topleft - self.offset - entity_offset
             self.screen.blit(entity.shadow_surf, offset_position + shadow_offset)
             self.screen.blit(entity.surf, offset_position)
+
+        # Draw UI elements
+        for element in ui_elements:
+            self.screen.blit(element.surf, element.position)
+            self.screen.blit(element.textsurf, element.textpos)
 
