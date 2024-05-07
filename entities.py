@@ -4,6 +4,12 @@ import pygame
 class LinearAnimation:
     is_last_frame_shown = False
     def __init__(self, actor, frames):
+        """Initialize a linear animation object.
+
+        Parameters:
+        actor: The entity object that the animation should belong to.
+        frames: Array of the frames that should be used, in the form of surface objects.
+        """
         self.actor = actor
         self.frame_index = 0
 
@@ -16,6 +22,8 @@ class LinearAnimation:
         self.animation_speed = 0.4
 
     def animate(self):
+        """Change actor surface to the correct frame."""
+        
         if self.is_last_frame_shown == True:
             self.is_last_frame_shown = False
         frame_to_show = min(len(self.frames)-1, int(self.frame_index * self.animation_speed))
@@ -33,9 +41,16 @@ class LinearAnimation:
 
 class LoopingAnimation(LinearAnimation):
     def __init__(self, actor, frames):
+        """Initialize a looping animation object.
+
+        Parameters:
+        actor: The entity object that the animation should belong to.
+        frames: Array of the frames that should be used, in the form of surface objects.
+        """
         super().__init__(actor, frames)
 
     def animate(self):
+        """Change actor surface to the correct frame."""
         frame_to_show = int(self.frame_index * self.animation_speed) % self.period
         if self.actor.facing == "right":
             self.actor.surf = self.frames[frame_to_show]
@@ -45,6 +60,14 @@ class LoopingAnimation(LinearAnimation):
 
 class AttackAnimation:
     def __init__(self, actor, windup_frames, linger_frames, cooldown_frames):
+        """Initialize an attack animation object.
+
+        Parameters:
+        actor: The entity object that the animation should belong to.
+        windup_frames: Frames where actor is getting ready for attack
+        linger_frames: Frames where actor is inflicting damage to enemies
+        cooldown_frames: Frames where actor is recovering from attack
+        """
         self.actor = actor
         self.frame_index = 0
 
@@ -58,7 +81,7 @@ class AttackAnimation:
         self.flipped_cooldown_frames = [pygame.transform.flip(frame, True, False) for frame in self.cooldown_frames]
 
     def animate(self):
-        # Change self.actor.surf to the correct frame
+        """Change actor surface to the correct frame, depending on state of actor."""
         actor_state = self.actor.state
         if actor_state == "windup":
             if self.actor.facing == "right":
@@ -78,6 +101,15 @@ class AttackAnimation:
 
 class HitterBox:
     def __init__(self, parent, dimensions, attachpoint, linger):
+        """Initialize an invisible box that inflicts damage to other entities that collide with it
+        
+        Parameters:
+        parent: Object to attach the box to (inflictor).
+        dimensions: Dimensions of the box.
+        attachpoint: Where to attach the box to
+        linger: # of frames the box should last
+        """
+        
         self.parent = parent
         self.rect = pygame.Rect((0,0), dimensions)
         self.linger = linger
@@ -90,10 +122,20 @@ class HitterBox:
 
         self.parent.child_objects.append(self)
     def update(self):
+        """Update the number of frames the box has been active."""
         self.time_on_screen += 1
 
 class Attack:
     def __init__(self, attacker, reach, sweep, damage, animation):
+        """Initialize an Attack object for an entity.
+        
+        Parameters:
+        attacker: Owner of the attack.
+        reach: How long the attack can reach, in pixels.
+        sweep: The vertical dimension of the attack.
+        damage: The damage inflicted if the attack hits.
+        animation: Animation to execute while attack is active.
+        """
         self.attacker = attacker
         self.reach = reach
         self.sweep = sweep
@@ -162,7 +204,14 @@ class Attack:
             self.animation.frame_index += 1
 
 class Player(pygame.sprite.Sprite):
+    """Class to manage the player object instances."""
     def __init__(self, health, initial_position):
+        """Initialize a new Player object.
+        
+        Parameters:
+        health: The initial health the player should have.
+        intial_positions: The initial coordinate with which to position the player.
+        """
         super().__init__()
         self.facing = "right"
 
@@ -211,6 +260,12 @@ class Player(pygame.sprite.Sprite):
 
 
     def update(self, enemies, map):
+        """Update the Player object.
+        
+        Parameters:
+        enemies: Array containing all enemies in the level. 
+        map: Map object of the level.
+        """
         if self.state in ["idle", "walk"]:
             if self.left_pressed or self.up_pressed or self.down_pressed or self.right_pressed:
                 self.state = "walk"
@@ -265,6 +320,12 @@ class Player(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, initial_position, damage):
+        """Initialize a new Enemy object.
+        
+        Parameters:
+        intial_positions: The initial coordinate with which to position the enemy.
+        damage: The damage that should be inflicted by the object's attacks.
+        """
         self.initial_position = initial_position
         self.damage = damage
 
@@ -310,11 +371,19 @@ class Enemy(pygame.sprite.Sprite):
         self.attack = Attack(self, 60, 15, damage, self.atk_animation)
 
     def copy(self):
-        # This method is used to copy enemy data to the level when it is started
-        # from the beginning.
+        """Make a carbon copy of the enemy object.
+
+        Returns:
+        Enemy(self.initial_position, self.damage): A 1-to-1 copy of the Enemy object.
+        """
         return Enemy(self.initial_position, self.damage)
 
     def update(self, player):
+        """Update the Enemy object.
+        
+        Parameters:
+        player: The currently active player object.
+        """
         # Get current distance to player
         x_distance_to_player = self.rect.centerx - player.rect.centerx
         y_distance_to_player = self.rect.centery - player.rect.centery
