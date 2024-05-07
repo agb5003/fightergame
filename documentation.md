@@ -83,7 +83,7 @@ Methods:
 
 - `animate(self)`: Instead of stopping when the last frame is shown, this animate method continues animating until another animation is selected.
 
-### AttackAnimation:
+### AttackAnimation
 
 This class does not inherit any other animation methods, as it works in a more complicated way. Its frames are put into three stages: windup, linger and cooldown. As the names suggest, windup corresponds to the stage of the animation where the character prepares to throw a punch, kick, or any other attack. Linger are the frames where the punch or kick lands and stays for a moment, and cooldown is when the character recovers from throwing the attack, going back to the idle stance.
 
@@ -185,7 +185,7 @@ The following are known issues with the game as of May 7th, 2024.
 
 - Classes `Player` and `Enemy` have similar contents. Refactoring to inheritance from a parent class might be the better way of writing them.
 
-- A cleaner solution than the current `setup(0` function might exist for initializing the global variables in the main file (menus, clock, FPS, game instance, etc.)
+- A cleaner solution than the current `setup()` function might exist for initializing the global variables in the main file (menus, clock, FPS, game instance, etc.)
 
 - A more accurate collision detection system using masks will get rid of moments where the player is hitting the air slightly in front of an enemy's face and the hit still registering. Currently it's using rectangles and this is unfortunately unavoidable.
 

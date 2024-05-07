@@ -22,6 +22,8 @@ def main():
     def setup():
         game_instance = GameInstance((SCREEN_WIDTH, SCREEN_HEIGHT), "Sendai 11PM")
 
+        start_backdrop = pygame.image.load("./resources/UI/start_backdrop.png")
+
         start_menu_items = [Menu.MenuItem("Start Game", (640, 350), game_instance.current_level.start_from_beginning),
                             Menu.MenuItem("Quit", (640, 450), quit_game)]
         start_menu = Menu("./resources/UI/start_screen.png", start_menu_items)
@@ -57,9 +59,9 @@ def main():
         clock = pygame.time.Clock()
         frames_per_second = 30
 
-        return game_instance, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second
+        return game_instance, start_backdrop, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second
 
-    game_instance, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second = setup()
+    game_instance, start_backdrop, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second = setup()
     while True:
 
         clock.tick(frames_per_second)
@@ -107,6 +109,7 @@ def main():
             quit_game()
         
         if game_instance.game_state == "start screen":
+            game_instance.screen.blit(start_backdrop, (0,0))
             start_menu.update()
         elif game_instance.game_state == "play":
             game_instance.current_level.update()

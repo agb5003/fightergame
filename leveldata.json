@@ -14,8 +14,8 @@
         "enemy_damage": 5
     },
     "2": {
-        "map": "./resources/Miami-synth-files/Layers/highway.png",
-        "scale": 3,
+        "map": "./resources/Miami-synth-files/preview.png",
+        "scale": 1,
         "traversable_height": 320,
         "player_health": 100,
         "player_initial_position": [40, 400],
