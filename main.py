@@ -124,7 +124,7 @@ def main():
                 if credits.last_item_centery < 150:
                     # When last item has gone on top of y-150
                     # Create a new game instance and go back to start screen
-                    game_instance, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second = setup()
+                    game_instance, start_backdrop, start_menu, continue_menu, pause_menu, game_over_menu, credits, clock, frames_per_second = setup()
         elif game_instance.game_state == "continue screen":
             continue_menu.update()
         elif game_instance.game_state == "game over":
